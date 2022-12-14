@@ -1,0 +1,139 @@
+#这是寒假用来学习《python高级编程》这本书的专用窗口，计划每天学完编程和计算机408后都发在GitHub上
+# 1/装饰器的含义
+# def decorate(func):
+#     func.__doc__+='\n出现了'
+#     return func
+# @decorate
+# def a():
+#     """这是a的说明文档，也可以说是函数的.__doc__"""
+# def b():
+#     """这是b的说明文档，也可以说是函数的.__doc__"""
+# decorate(b)
+# print(a.__doc__)
+# print(b.__doc__)
+#可以看见，对于用@decorate和直接用decorate()方法的不同函数，最终可以得到相同的作用效果，所以装饰器的作用就是用来修饰函数，使其功能得到完善或者特殊化
+
+# 2、装饰器的顺序
+# def deco1(fun):
+#     fun.__doc__+='\n这是第一个装饰器带来的改变'
+#     return fun
+# def deco2(fun):
+#     fun.__doc__+='\n这是第二个装饰器带来的改变'
+#     return fun
+# @deco1
+# @deco2
+# def func1():
+#     """这是第一个函数，看看变化"""
+# @deco2
+# @deco1
+# def func2():
+#     """这是第二个函数，看看变化"""
+# print(func1.__doc__)
+# print('----------------------')
+# print(func2.__doc__)
+#可以看到，不同的装饰器顺序会带来不同的函数功能变化，第一个类似于deco1(deco2(func1)),而第二个则为deco2(deco1(func2))
+
+#1.3 装饰器是显式的，在很多功能上都运用了装饰器来优化，装饰器又分为类装饰和函数装饰器，它常用的功能由：给函数附加功能、数据清理或添加、函数注册等等，它就像类的__init__
+#一样，在用于修饰函数会自动调用
+
+#1.4 初始示例——函数注册表
+#1.1 这是一个很简单的修饰器运用，但是可以证明：当修饰器函数被运用到的时候（@出现），他和函数就会执行一次。
+# all_return=[]
+# def registered(a):
+#     all_return.append(a())
+#     return a
+# @registered
+# def fir():
+#     return 1
+# print(all_return)
+# @registered
+# def sec():
+#     return 2
+# print(all_return)
+# fir()
+# print(all_return)
+# sec()
+# print(all_return)
+
+#1.2 扩展：让函数在指定的条件下完成自定义功能---利用类方法
+# class re():
+#     def __init__(self):
+#         self.nums=[]
+#         self.funs=[]
+#     def num(self,decorated):
+#         self.nums.append(decorated())
+#         self.funs.append(decorated)
+#         return(decorated)
+#     def run_all(self,*a,**b):
+#         print(self.nums)
+#         for c in self.funs:
+#             print(c(*a,**b))
+# a=re()
+# b=re()
+# @a.num
+# def fucn1(x=1):
+#     return(x)
+# @b.num
+# def func2(x=2):
+#     return(x)
+# @a.num
+# def func3(x=3):
+#     return(x)
+# a.run_all(x=5)
+# b.run_all()
+
+#1.3 为函数添加功能，以加入类型检测为例,此处又引入了一个函数inner，可以带入最前面的decorate(output),相当于在fun前面加入了类型检查模块。还要注意函数的参数，在第一级的decorate下
+#又加入了inner函数，用inner函数来为被修饰函数来引入参数。但是输入help(output())之后，显示的是inner的帮助文档
+# def decorate(fun):
+#     def inner(*a,**b):
+#         c=[d for d in b.values()]+list(a)
+#         for d in c:
+#             if type(d) != type(1):
+#                 print('类型不符合')
+#                 return 0
+#         return fun(*a,**b)
+#     return inner
+# @decorate
+# def output(*a,**b):
+#     """这是output的帮助文档"""
+#     print(list(a)+list(b.values()))
+# output(1,2,3,4.5)
+# help(output)
+# print(output.__doc__)
+
+#为了解决上面的问题，可以使用functools.wraps(被装饰的函数名)函数来保存原函数的帮助信息。可以看见：帮助文档从inner变为了fun。
+# import functools
+# def decorate(fun):
+#
+#     def inner(*a,**b):
+#         c=[d for d in b.values()]+list(a)
+#         for d in c:
+#             if type(d) != type(1):
+#                 print('类型不符合')
+#                 return 0
+#         return fun(*a,**b)
+#     return inner
+# @decorate
+# def output(*a,**b):
+#     """这是output的帮助文档"""
+#     print(list(a)+list(b.values()))
+# output(1,2,3,4.5)
+# help(output)
+# print(output.__doc__)
+
+#类方法
+# import functools
+# def cls_fun(cls):
+#     cls1_init=cls.__init__
+#     @functools.wraps(cls1_init)
+#     def creat_fun(self,*a,**b):
+#         cls1_init(self,*a,**b)
+#         cls.change='yjy到此一游'
+#     cls.__init__=creat_fun
+#     return cls
+# @cls_fun
+# class q():
+#     def __init__(self):
+#         self.asd='asvasv'
+# a=q()
+# print(a.change)
