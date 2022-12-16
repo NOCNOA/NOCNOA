@@ -1,0 +1,102 @@
+#上下文管理器，它是python中的一种协议，实现了这种协议的类的实例，都是上下文管理器对象。文件的输入输出、数据库的连接断开等，都是很常见的资源管理操作。
+#但资源都是有限的，在写程序时，我们必须保证这些资源在使用过后得到释放，不然就容易造成资源泄露，轻者使得系统处理缓慢，重则会使系统崩溃。上下文管理器，能够帮助你自动分配并且释放资源。
+#也就是说，上下文管理器可以自动分配资源并且自动关闭、释放资源。常被用于正确释放资源
+#举例：在打开文件时, 像下面这样：
+# a=open('file_being_opened\\being_opened.txt','r')
+# pass
+# a.close()
+# #但是也可以用with的方式：
+# with open('file_being_opened\\being_opened.txt','r') as a:
+#     pass
+#他们几乎是等价的，那么其中发生了什么，让with语句可以不用关闭打开的文件呢？
+#with是上下文管理器之中常见的一种，在这里，with打开文件后，其内部的方法__enter__(self)返回的结果送到a中，而执行完后，内部的方法__exit__(a,b,c)会按照需求传播，终止，抛出异常。
+#接下来让我们了解这两个方法,首先创建一个类
+# class CM():
+#     def __init__(self):
+#         print('123')
+#         self.entered=False
+#     def __enter__(self):
+#         self.entered=True
+#         return self
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         self.entered=False
+# #这个类被用于上下文管理器
+# a=CM()
+# print(a.entered)#此时可见a.entered==1
+# a.__enter__()
+# print(a.entered)#可见a.__enter__运行，但是a.__exit__没
+# a.__exit__(None,None,None)
+# print(a.entered)
+# with CM() as c:
+#     print(c.entered)#此时可以看见，__enter__方法已经执行过了，且是用完with后自发的
+# print(c.entered)#但是退出with的作用后，__exit__也自动被调用，也是退出with后自发的
+#我们可以看见，__exit__方法有四个参数：出去我们熟知的self，还有exc_type:异常类型、exc_val：异常实例和exc_tb:回溯.
+# 前面说过：__exit__方法可以用来处理异常，但是有的时候没有异常，就会给它们三个参数赋为None，
+# 如果__exit__的返回值为真就中止异常，继续运行代码，如果为假则传播异常终止程序
+#接下来就是对于__exit__方法的三个主要作用的解释：
+#1、中止异常
+# class stop_Error():
+#     def __enter__(self):
+#         return self
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         if exc_val:
+#             print(exc_val)
+#         return 2
+# with stop_Error() as a:
+#     5+5
+#     print('success1')
+#     5/0
+#     print('success2')
+#这说明，没有运行报错了以后的程序，但是很明显运行了__exit__()函数，此外，程序没有报错，被中止。但是，当把__exit__()的return的值改为0后，就会报错，这也验证了上面所说的。
+#不过，这个就相当于一个 try语句，没有什么营养。
+#2、异常传播
+# def a():
+#     pass
+# class stop_Error():
+#     def __enter__(self):
+#         return self
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         if exc_val:
+#             print(exc_val)
+#         return 0
+# with stop_Error() as b:
+#     a(1)
+#由于该方法的返回值为False，所以它的异常被重新抛出。
+
+#下面就是关于上下文管理器的一些应用了
+#1、处理特定的异常
+# class HandleValueError():
+#     def __enter__(self):
+#         return self
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         if exc_type == False:
+#             return 1
+#         if issubclass(exc_type,ValueError):
+#             return 1
+#         return 0
+# with HandleValueError():
+#     raise ValueError
+# with HandleValueError():
+#     raise TypeError
+
+#2、不包括的子类
+# class ValueError2(ValueError):
+#     pass
+# class HandleValueError():
+#     def __enter__(self):
+#         return self
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         if exc_type == False:
+#             return 1
+#         if issubclass(exc_type,ValueError):
+#             return 1
+#         print(exc_type)
+#         return 0
+# with HandleValueError():
+#     raise ValueError
+# with HandleValueError():
+#     raise ValueError2
+# with HandleValueError():
+#     raise TypeError
+
+#更加简单的语法，可以用@contextlibr.contextmanager装饰器将函数装饰为上下文管理器.
