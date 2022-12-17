@@ -1,0 +1,44 @@
+#生成器是一个函数，相比于迭代器，它的作用方式有很大的不同：他会在你需要的时候，一个一个的输出。
+# 生成器函数使用yield来返回的，会返回一个生成器(generator)对象，如果要使用这个对象，有3个方法：
+#1、生成器对象可以迭代，可以使用for循环
+#2、可以用list、tuple方法来运用，此时，会直接完成函数，再将值返回给list、tuple函数
+#3、用内置方法.__next__()（即next（）来运用),要求第几次的就用几次next
+#4、注意看最后的结果，num一次性返回了2、3、4，而不是0，1，2，3，4.此外，若超过了范围，那么就会引发StopIteration的报错。
+# def intNum():
+#     print("开始执行")
+#     i=1
+#     while 1:
+#         yield i
+#         i+=1
+#         print("继续执行")
+# num = intNum()
+# print(type(num))
+# print(next(num))
+# print(next(num))
+# a=list(num)
+# print(a)
+#也许你不想从头开始，而是从某一个数开始,那么只需要稍微改变上面的代码：
+def intNum(i=0):
+    b=None
+    print("开始执行")
+    while 1:
+        if b:           #若b=0，那么把以i为开始数的值赋给b，反之把以b开始的generator赋给b
+            b=yield b
+        b=yield i
+        i+=1
+#变化很简单，接下来看看效果
+a=intNum()
+#先运行三个，让i变为4
+
+print(a.__next__())
+print(a.__next__())
+print(a.__next__())
+#提前
+print(a.send(1))
+print(a.__next__())
+#滞后
+print(a.send(12))
+print(a.__next__())
+#在python中，生成器是迭代器的子类，而迭代器则是包含next方法的对象，而迭代对象则是定义了__iter__方法的对象，
+#可迭代对象在使用该方法之后就返回一个迭代器
+#在标准库之中，有这么几个生成器函数：range  dic.items dic.values dic.keys zip map 和文件操作里面的readline
